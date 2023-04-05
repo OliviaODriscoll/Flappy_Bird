@@ -37,9 +37,9 @@ const float UPPER_FLEX_BOUND = 3000000.0;      // TODO: measure ourselves
 const int MAX_ANALOG_READ = 1023.0;
 
 // motors
-const int CAROUSEL_MOTOR_PIN = 3;
+const int CAROUSEL_MOTOR_PIN = 6;
 const int CAROUSEL_MOTOR_SPEED = 100;  // 0 to 255 scale
-const int BIRD_MOTOR_PIN = 3;
+const int BIRD_MOTOR_PIN = 10;
 const int BIRD_MOTOR_SPEED = 30;  // 0 to 255 scale
 
 int flexADC;
@@ -75,8 +75,6 @@ void setup() {
 }
 
 void loop() {
-  
-  Serial.println(startToggle);
 
   if ((digitalRead(START_BUTTON_PORT) == 1) && (!startToggle)) {  //button has been pressed to start game
     startToggle = true;
@@ -86,13 +84,14 @@ void loop() {
   }
 
   while (startToggle){
-    //Serial.println(score);
     game();
 
-    if((LOWER_FLEX_BOUND > measureFlex()) || (UPPER_FLEX_BOUND < measureFlex()))
+    Serial.println(measureFlex());
+    if((LOWER_FLEX_BOUND > measureFlex()) || (UPPER_FLEX_BOUND < measureFlex())){
       gameOver();
       delay(2000);      
       startToggle = false;
+    }
   }
 
 
@@ -107,7 +106,7 @@ void game() {
     incrementScore();
   lcd.print(score);  // Prints the score
   
-  // rotateCarousel();
+  rotateCarousel();
   // // TODO: we need to figure out how to stop the bird from moving too high or low
   // while (digitalRead(BIRD_UP_BUTTON_PORT) == 1)
   // {
