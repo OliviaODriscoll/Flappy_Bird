@@ -32,7 +32,7 @@ const float R_DIV = 47500.0;  // Measured resistance of 3.3k resistor
 // accurately calculate bend degree.
 const float STRAIGHT_RESISTANCE = 16860.93;  // resistance when straight
 const float BEND_RESISTANCE = 24248750.00;   // resistance at 90 deg
-const float LOWER_FLEX_BOUND = 2.0;      // TODO: measure ourselves
+const float LOWER_FLEX_BOUND = 6000.0;      // TODO: measure ourselves
 const float UPPER_FLEX_BOUND = 3000000.0;      // TODO: measure ourselves
 const int MAX_ANALOG_READ = 1023.0;
 
@@ -50,7 +50,7 @@ float flexR;
 const int MILLI_TO_SECOND = 1000;
 int TIME_ZERO = 0;
 int score = 0;
-const float SCORE_CONSTANT = 1;
+const float SCORE_CONSTANT = 0.01;
 
 bool startToggle = false;
 
@@ -104,6 +104,7 @@ void game() {
 
   if ((millis()) % (200) < 10)  // if the time is 1 seconds, update the score
     incrementScore();
+  lcd.setCursor(0,0);
   lcd.print(score);  // Prints the score
   
   rotateCarousel();
@@ -157,7 +158,7 @@ void incrementScore() {
 */
 void stopMotors() {
   analogWrite(BIRD_MOTOR_PIN, 0);
-  analogWrite(CAROUSEL_MOTOR_PIN, CAROUSEL_MOTOR_SPEED);
+  analogWrite(CAROUSEL_MOTOR_PIN, 0);
 }
 
 /**
