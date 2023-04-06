@@ -11,8 +11,7 @@
 const int START_BUTTON_PORT = 8;
 
 // bird moving pins
-const int BIRD_UP_BUTTON_PORT = 7;
-const int BIRD_DOWN_BUTTON_PORT = 6;
+const int BIRD_DOWN_BUTTON_PORT = 13;
 
 // LCD
 const int LCD_RS = 12;
@@ -38,22 +37,21 @@ const int MAX_ANALOG_READ = 1023.0;
 
 // motors
 const int CAROUSEL_MOTOR_PIN = 6;
-const int CAROUSEL_MOTOR_SPEED = 100; // 0 to 255 scale
+const int CAROUSEL_MOTOR_SPEED = 10; // 0 to 255 scale
 const int BIRD_MOTOR_PIN = 10;
-const int BIRD_MOTOR_SPEED = 30; // 0 to 255 scale
+const int BIRD_MOTOR_SPEED = 2; // 0 to 255 scale
 
 // beam break
 const int BEAM_BREAK_PIN = 7;
+int beamState;
+int lastBeamState = 0;
 
 int flexADC;
 float flexV;
 float flexR;
 
 // game data
-const int MILLI_TO_SECOND = 1000;
-int TIME_ZERO = 0;
 int score = 0;
-const float SCORE_CONSTANT = 0.01;
 
 bool startToggle = false;
 
@@ -65,7 +63,6 @@ void setup()
 
     // set up button
     pinMode(START_BUTTON_PORT, INPUT);
-    pinMode(BIRD_UP_BUTTON_PORT, INPUT);
     pinMode(BIRD_DOWN_BUTTON_PORT, INPUT);
     pinMode(FLEX_PIN, INPUT);
     pinMode(CAROUSEL_MOTOR_PIN, OUTPUT);
@@ -85,7 +82,6 @@ void loop()
     if ((digitalRead(START_BUTTON_PORT) == 1) && (!startToggle))
     { // button has been pressed to start game
         startToggle = true;
-        TIME_ZERO = millis();
         lcd.clear();
         lcd.setCursor(0, 0);
     }
@@ -110,24 +106,23 @@ void loop()
 void game()
 {
 
-    sensorState = digitalRead(SENSORPIN);
+    beamState = digitalRead(BEAM_BREAK_PIN);
 
-    if ((millis()) % (200) < 10) // if the time is 1 seconds, update the score
-        incrementScore();
+    if (!beamState && lastBeamState)  // if the beam was just broken, increase score
+        score ++;
+    lastBeamState = beamState;
+
     lcd.setCursor(0, 0);
     lcd.print(score); // Prints the score
 
     rotateCarousel();
-    // // TODO: we need to figure out how to stop the bird from moving too high or low
-    // while (digitalRead(BIRD_UP_BUTTON_PORT) == 1)
-    // {
-    //   analogWrite(BIRD_MOTOR_PIN, BIRD_MOTOR_SPEED);
-    // }
-    // while (digitalRead(BIRD_UP_BUTTON_PORT) == 0)
-    // {
-    //   analogWrite(BIRD_MOTOR_PIN, BIRD_MOTOR_SPEED);
-    // }
+    while (digitalRead(START_BUTTON_PORT) == 1)
+        analogWrite(BIRD_MOTOR_PIN, BIRD_MOTOR_SPEED);
+    while (digitalRead(BIRD_DOWN_BUTTON_PORT) == 1)
+        analogWrite(BIRD_MOTOR_PIN, -BIRD_MOTOR_SPEED);
 }
+
+
 
 /**
  * measures the flex sensor resistance to detect when the game is over
@@ -156,14 +151,6 @@ float measureFlex()
 void rotateCarousel()
 {
     analogWrite(CAROUSEL_MOTOR_PIN, CAROUSEL_MOTOR_SPEED);
-}
-
-/**
- * increments the user's score when a certain amount of time is elapsed
- */
-void incrementScore()
-{
-    score = (millis() - TIME_ZERO) * SCORE_CONSTANT;
 }
 
 /**
