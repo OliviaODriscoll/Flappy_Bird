@@ -37,9 +37,9 @@ const int MAX_ANALOG_READ = 1023.0;
 
 // motors
 const int CAROUSEL_MOTOR_PIN = 6;
-const int CAROUSEL_MOTOR_SPEED = 10; // 0 to 255 scale
+const int CAROUSEL_MOTOR_SPEED = 10; // 0 to 255 scale TODO:tune
 const int BIRD_MOTOR_PIN = 10;
-const int BIRD_MOTOR_SPEED = 2; // 0 to 255 scale
+const int BIRD_MOTOR_SPEED = 2; // 0 to 255 scale TODO: tune
 
 // beam break
 const int BEAM_BREAK_PIN = 7;
