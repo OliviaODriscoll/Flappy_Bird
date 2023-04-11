@@ -8,10 +8,17 @@
 #include <LiquidCrystal.h> // includes the LiquidCrystal Library
 #include <Servo.h>
 
-// define constants
+// define ports
+const int CAROUSEL_MOTOR_PIN = 10;
 const int START_BUTTON_PORT = 8;
+const int BEAM_BREAK_PIN = 7;
+const int BIRD_CONTROL_POT_PIN = 13;
+const int BIRD_MOTOR_PIN = 6;
+const int FLEX_PIN = A0; // Pin connected to voltage divider output
+// Measure the voltage at 5V and the actual resistance of your
+// 47k resistor, and enter them below:
 
-// LCD
+// LCD ports
 const int LCD_RS = 12;
 const int LCD_ENABLE = 11;
 const int LCD_D4 = 5;
@@ -19,10 +26,9 @@ const int LCD_D5 = 4;
 const int LCD_D6 = 3;
 const int LCD_D7 = 2;
 
+// define constants
+
 // flex sensor
-const int FLEX_PIN = A0; // Pin connected to voltage divider output
-// Measure the voltage at 5V and the actual resistance of your
-// 47k resistor, and enter them below:
 const float VCC = 4.98;      // Measured voltage of Ardunio 5V line
 const float R_DIV = 47500.0; // Measured resistance of 3.3k resistor
 // Upload the code, then try to adjust these values to more
@@ -34,19 +40,19 @@ const float UPPER_FLEX_BOUND = 3000000.0;   // TODO: measure ourselves
 const int MAX_ANALOG_READ = 1023.0;
 
 // motors
-const int CAROUSEL_MOTOR_PIN = 10;
 const int CAROUSEL_MOTOR_SPEED = 10; // 0 to 255 scale TODO:tune
-const int BIRD_MOTOR_PIN = 6;
+
+// instantiate objects
 Servo birdServo;                // create servo object to control a servo
+
+// initialize variables
 int birdPos = 0;                // variable to store the servo position
-const int BIRD_MOTOR_SPEED = 2; // 0 to 255 scale TODO: tune
-const int BIRD_CONTROL_POT_PIN = 13;
 
 // beam break
-const int BEAM_BREAK_PIN = 7;
 int beamState;
 int lastBeamState = 0;
 
+// flex
 int flexADC;
 float flexV;
 float flexR;
@@ -64,7 +70,6 @@ void setup()
 
     // set up button
     pinMode(START_BUTTON_PORT, INPUT);
-    pinMode(BIRD_DOWN_BUTTON_PORT, INPUT);
     pinMode(FLEX_PIN, INPUT);
     pinMode(CAROUSEL_MOTOR_PIN, OUTPUT);
     pinMode(BEAM_BREAK_PIN, INPUT);
@@ -91,7 +96,7 @@ void loop()
     {
         game();
 
-        Serial.println(measureFlex());
+        // check if game is over
         if ((LOWER_FLEX_BOUND > measureFlex()) || (UPPER_FLEX_BOUND < measureFlex()))
         {
             gameOver();
@@ -120,15 +125,14 @@ void game()
     rotateCarousel();
 }
 
-
 /**
  * sets bird position using servo controlled by potentiometer
  */
 void moveBird()
 {
-    birdPos = analogRead(BIRD_CONTROL_POT_PIN);        // reads the value of the potentiometer (value between 0 and 1023)
-    birdPos = map(birdPos, 0, 1023, 0, 180); // scale it to use it with the servo (value between 0 and 180)
-    myservo.write(birdPos);              // sets the servo position according to the scaled value
+    birdPos = analogRead(BIRD_CONTROL_POT_PIN); // reads the value of the potentiometer (value between 0 and 1023)
+    birdPos = map(birdPos, 0, 1023, 0, 180);    // scale it to use it with the servo (value between 0 and 180)
+    myservo.write(birdPos);                     // sets the servo position according to the scaled value
 }
 
 /**
