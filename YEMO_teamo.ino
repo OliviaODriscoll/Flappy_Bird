@@ -6,12 +6,10 @@
  */
 
 #include <LiquidCrystal.h> // includes the LiquidCrystal Library
+#include <Servo.h>
 
 // define constants
 const int START_BUTTON_PORT = 8;
-
-// bird moving pins
-const int BIRD_DOWN_BUTTON_PORT = 13;
 
 // LCD
 const int LCD_RS = 12;
@@ -36,10 +34,13 @@ const float UPPER_FLEX_BOUND = 3000000.0;   // TODO: measure ourselves
 const int MAX_ANALOG_READ = 1023.0;
 
 // motors
-const int CAROUSEL_MOTOR_PIN = 6;
+const int CAROUSEL_MOTOR_PIN = 10;
 const int CAROUSEL_MOTOR_SPEED = 10; // 0 to 255 scale TODO:tune
-const int BIRD_MOTOR_PIN = 10;
+const int BIRD_MOTOR_PIN = 6;
+Servo birdServo;                // create servo object to control a servo
+int birdPos = 0;                // variable to store the servo position
 const int BIRD_MOTOR_SPEED = 2; // 0 to 255 scale TODO: tune
+const int BIRD_CONTROL_POT_PIN = 13;
 
 // beam break
 const int BEAM_BREAK_PIN = 7;
@@ -66,8 +67,8 @@ void setup()
     pinMode(BIRD_DOWN_BUTTON_PORT, INPUT);
     pinMode(FLEX_PIN, INPUT);
     pinMode(CAROUSEL_MOTOR_PIN, OUTPUT);
-    pinMode(BIRD_MOTOR_PIN, OUTPUT);
     pinMode(BEAM_BREAK_PIN, INPUT);
+    birdServo.attach(BIRD_MOTOR_PIN);
     Serial.begin(9600);
 
     lcd.setCursor(0, 0);
@@ -108,21 +109,27 @@ void game()
 
     beamState = digitalRead(BEAM_BREAK_PIN);
 
-    if (!beamState && lastBeamState)  // if the beam was just broken, increase score
-        score ++;
+    if (!beamState && lastBeamState) // if the beam was just broken, increase score
+        score++;
     lastBeamState = beamState;
 
     lcd.setCursor(0, 0);
     lcd.print(score); // Prints the score
 
+    moveBird();
     rotateCarousel();
-    while (digitalRead(START_BUTTON_PORT) == 1)
-        analogWrite(BIRD_MOTOR_PIN, BIRD_MOTOR_SPEED);
-    while (digitalRead(BIRD_DOWN_BUTTON_PORT) == 1)
-        analogWrite(BIRD_MOTOR_PIN, -BIRD_MOTOR_SPEED);
 }
 
 
+/**
+ * sets bird position using servo controlled by potentiometer
+ */
+void moveBird()
+{
+    birdPos = analogRead(BIRD_CONTROL_POT_PIN);        // reads the value of the potentiometer (value between 0 and 1023)
+    birdPos = map(birdPos, 0, 1023, 0, 180); // scale it to use it with the servo (value between 0 and 180)
+    myservo.write(birdPos);              // sets the servo position according to the scaled value
+}
 
 /**
  * measures the flex sensor resistance to detect when the game is over
