@@ -6,14 +6,19 @@
  */
 
 #include <LiquidCrystal.h> // includes the LiquidCrystal Library
+#include <Servo.h>
 
-// define constants
-const int SW_PIN = 8; // digital pin connected to switch output
-const int X_PIN = 1; // analog pin connected to X output
-const int Y_PIN = 2; // analog pin connected to Y output
+// define ports
+const int SW_pin = 13; // digital pin connected to switch output
+const int X_pin = 0; // analog pin connected to X output
+const int Y_pin = 1; // analog pin connected to Y output
 
+const int BEAM_BREAK_PIN = 7;
+const int FLEX_PIN = A0; // Pin connected to voltage divider output
+// Measure the voltage at 5V and the actual resistance of your
+// 47k resistor, and enter them below:
 
-// LCD
+// LCD ports
 const int LCD_RS = 12;
 const int LCD_ENABLE = 11;
 const int LCD_D4 = 5;
@@ -22,9 +27,6 @@ const int LCD_D6 = 3;
 const int LCD_D7 = 2;
 
 // flex sensor
-const int FLEX_PIN = A0; // Pin connected to voltage divider output
-// Measure the voltage at 5V and the actual resistance of your
-// 47k resistor, and enter them below:
 const float VCC = 4.98;      // Measured voltage of Ardunio 5V line
 const float R_DIV = 47500.0; // Measured resistance of 3.3k resistor
 // Upload the code, then try to adjust these values to more
@@ -36,22 +38,27 @@ const float UPPER_FLEX_BOUND = 3000000.0;   // TODO: measure ourselves
 const int MAX_ANALOG_READ = 1023.0;
 
 // motors
-const int CAROUSEL_MOTOR_PIN = 6;
-const int CAROUSEL_MOTOR_SPEED = 10; // 0 to 255 scale
-const int BIRD_MOTOR_PIN = 10;
-const int BIRD_MOTOR_SPEED = 2; // 0 to 255 scale
+const int CAROUSEL_MOTOR_SPEED = 10; // 0 to 255 scale TODO:tune
+const int CAROUSEL_MOTOR_PIN = 10;
+
+// instantiate objects
+Servo birdServo; // create servo object to control a servo
+
+// initialize variables
+int birdPos = 0; // variable to store the servo position
 
 // beam break
-const int BEAM_BREAK_PIN = 7;
 int beamState;
 int lastBeamState = 0;
 
+// flex
 int flexADC;
 float flexV;
 float flexR;
 
 // game data
 int score = 0;
+int pos;
 
 bool startToggle = false;
 
@@ -66,7 +73,6 @@ void setup()
     digitalWrite(SW_pin, HIGH);
     pinMode(FLEX_PIN, INPUT);
     pinMode(CAROUSEL_MOTOR_PIN, OUTPUT);
-    pinMode(BIRD_MOTOR_PIN, OUTPUT);
     pinMode(BEAM_BREAK_PIN, INPUT);
     Serial.begin(9600);
 
@@ -110,23 +116,21 @@ void game()
 
     beamState = digitalRead(BEAM_BREAK_PIN);
 
-    if (!beamState && lastBeamState)  // if the beam was just broken, increase score
-        score ++;
+    if (!beamState && lastBeamState) // if the beam was just broken, increase score
+        score++;
     lastBeamState = beamState;
 
     lcd.setCursor(0, 0);
     lcd.print(score); // Prints the score
 
     rotateCarousel();
-    while (digitalRead(X_PIN) > 0)
-      for (pos = 0; pos <= 180; pos += 1) // goes from 0 degrees to 180 degrees
-        myservo.write(pos);              // tell servo to go to position in variable 'pos' 
-    while (digitalRead(X_PIN) < 0)
-      for (pos = 0; pos <= 180; pos += 1) // goes from 0 degrees to 180 degrees
-        myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+    while (digitalRead(X_pin) > 0)
+        for (pos = 0; pos <= 180; pos += 1) // goes from 0 degrees to 180 degrees
+            birdServo.write(pos);           // tell servo to go to position in variable 'pos'
+    while (digitalRead(X_pin) < 0)
+        for (pos = 0; pos <= 180; pos += 1) // goes from 0 degrees to 180 degrees
+            birdServo.write(pos);           // tell servo to go to position in variable 'pos'
 }
-
-
 
 /**
  * measures the flex sensor resistance to detect when the game is over
@@ -162,7 +166,7 @@ void rotateCarousel()
  */
 void stopMotors()
 {
-    analogWrite(BIRD_MOTOR_PIN, 0);
+    birdServo.detach();
     analogWrite(CAROUSEL_MOTOR_PIN, 0);
 }
 
