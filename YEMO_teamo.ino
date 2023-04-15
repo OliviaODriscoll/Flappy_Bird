@@ -76,6 +76,8 @@ void setup()
     pinMode(BEAM_BREAK_PIN, INPUT);
     Serial.begin(9600);
 
+    birdServo.write(birdPos);
+
     lcd.setCursor(0, 0);
     lcd.print("Welcome to"); // Prints "Welcome to Flappy Bird!" on the LCD
     lcd.setCursor(0, 1);
@@ -125,11 +127,11 @@ void game()
 
     rotateCarousel();
     while (digitalRead(X_pin) > 0)
-        for (pos = 0; pos <= 180; pos += 1) // goes from 0 degrees to 180 degrees
-            birdServo.write(pos);           // tell servo to go to position in variable 'pos'
+        for (; birdPos <= 180; pos += 1) // goes up to 180 degrees
+            birdServo.write(birdPos);           // tell servo to go to position in variable 'pos'
     while (digitalRead(X_pin) < 0)
-        for (pos = 0; pos <= 180; pos += 1) // goes from 0 degrees to 180 degrees
-            birdServo.write(pos);           // tell servo to go to position in variable 'pos'
+        for (; birdPos >= 0; birdPos -= 1) // goes down to 0 degrees
+            birdServo.write(birdPos);           // tell servo to go to position in variable 'pos'
 }
 
 /**
