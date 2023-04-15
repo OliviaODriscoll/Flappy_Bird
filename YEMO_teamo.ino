@@ -127,7 +127,7 @@ void game()
 
     rotateCarousel();
     while (digitalRead(X_pin) > 0)
-        for (; birdPos <= 180; pos += 1) // goes up to 180 degrees
+        for (; birdPos <= 180; birdPos += 1) // goes up to 180 degrees
             birdServo.write(birdPos);           // tell servo to go to position in variable 'pos'
     while (digitalRead(X_pin) < 0)
         for (; birdPos >= 0; birdPos -= 1) // goes down to 0 degrees
