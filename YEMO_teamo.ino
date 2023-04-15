@@ -9,9 +9,9 @@
 #include <Servo.h>
 
 // define ports
-const int SW_pin = 13; // digital pin connected to switch output
-const int X_pin = 0; // analog pin connected to X output
-const int Y_pin = 1; // analog pin connected to Y output
+const int SW_pin = 8; // digital pin connected to switch output
+const int X_pin = 2; // analog pin connected to X output
+const int Y_pin = 3; // analog pin connected to Y output
 
 const int BEAM_BREAK_PIN = 7;
 const int FLEX_PIN = A0; // Pin connected to voltage divider output
