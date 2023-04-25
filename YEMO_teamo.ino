@@ -23,13 +23,14 @@ const int LCD_D4 = 5;
 const int LCD_D5 = 4;
 const int LCD_D6 = 3;
 const int LCD_D7 = 2;
-const int CAROUSEL_MOTOR_PIN = 10;
-const int BIRD_SERVO_PIN = 9;
+const int CAROUSEL_MOTOR_PIN = 9;
+const int BIRD_SERVO_PIN = 10;
 const int BEAM_BREAK_PIN = 7;
 
 /** GAME VARIABLES */
 
 // smoothing
+const int MAX_READINGS = 10;
 int Xreadings[MAX_READINGS];
 int XreadIndex = 0;
 int Xtotal = 0;
@@ -41,7 +42,7 @@ int Ytotal = 0;
 int Y_Pos = 0;
 
 // bird
-int birdPos = 0 int pos = 0;
+int birdPos = 0; int pos = 0;
 
 // beam break
 int beamState;
@@ -57,20 +58,16 @@ int score = 0;
 bool startToggle = false;
 
 /** GAME CONSTANTS */
-const int MAX_READINGS = 10;
 const int MAX_ANALOG_READ = 1023.0;
 const int MAX_SERVO_POS = 180;
 
 // flex sensor
 const float VCC = 4.98;                     // Measured voltage of Ardunio 5V line
 const float R_DIV = 47500.0;                // Measured resistance of 3.3k resistor
-const float STRAIGHT_RESISTANCE = 16860.93; // resistance when straight
-const float BEND_RESISTANCE = 24248750.00;  // resistance at 90 deg
-const float LOWER_FLEX_BOUND = 6000.0;      // TODO: measure ourselves
-const float UPPER_FLEX_BOUND = 3000000.0;   // TODO: measure ourselves
+const float FLEX_BOUND = 930.0;      // TODO: measure ourselves
 
 // motors
-const int CAROUSEL_MOTOR_SPEED = 255; // 0 to 255 scale TODO:tune
+const int CAROUSEL_MOTOR_SPEED = 180; // 0 to 255 scale TODO:tune
 
 /** OBJECTS */
 Servo birdServo;                                                       // create servo object to control a servo
@@ -93,7 +90,6 @@ void setup()
 
     // set up bird servo motor
     birdServo.attach(BIRD_SERVO_PIN);
-    birdServo.write(birdPos);
 
     // initialize arrays to 0 for smoothing method
     for (int i = 0; i < MAX_READINGS; i++)
@@ -117,7 +113,7 @@ void loop()
 
     analogWrite(6, 9);
 
-    if ((digitalRead(SW_pin) == 1) && (!startToggle))
+    if ((digitalRead(SW_pin) == 0) && (!startToggle))
     { // button has been pressed to start game
         startToggle = true;
         lcd.clear();
@@ -129,8 +125,8 @@ void loop()
     {
         game();
 
-        Serial.println(measureFlex());
-        if ((LOWER_FLEX_BOUND > measureFlex()) || (UPPER_FLEX_BOUND < measureFlex()))
+        //Serial.println(measureFlex());
+        if (FLEX_BOUND > measureFlex()) //TODO: change to <
         {
             gameOver();
             delay(2000); // does the delay need to be this large?
@@ -158,6 +154,7 @@ void incrementScore()
 
     if (!beamState && lastBeamState) // if the beam was just broken, increase score
         score++;
+        lcd.print(score);
     lastBeamState = beamState;
 }
 
@@ -167,7 +164,7 @@ void incrementScore()
 void printScore()
 {
     lcd.setCursor(0, 0);
-    lcd.print(score); // Prints the score
+    lcd.println(score); // Prints the score
 }
 
 /**
@@ -175,10 +172,9 @@ void printScore()
  */
 void positionBird()
 {
-    smoother(X_pin, Y_pin);
+    smoother(X_pin,Y_pin);
     birdPos = map(X_Pos, 0, MAX_ANALOG_READ, 0, MAX_SERVO_POS);
-    myservo.write(birdPos);
-    delay(20);
+    birdServo.write(birdPos);
 }
 
 /**
@@ -190,16 +186,7 @@ float measureFlex()
     flexADC = analogRead(FLEX_PIN);
     flexV = flexADC * VCC / MAX_ANALOG_READ;
     flexR = R_DIV * (VCC / flexV - 1.0);
-    // Serial.println("Resistance: " + String(flexR) + " ohms");
     return flexR;
-
-    // Use the calculated resistance to estimate the sensor's
-    // bend angle:
-    // float angle = map(flexR, STRAIGHT_RESISTANCE, BEND_RESISTANCE,
-    // 0, 90.0);
-    // return angle;
-    //  Serial.println("Bend: " + String(angle) + " degrees");
-    //  Serial.println();
 }
 
 /**
@@ -253,7 +240,7 @@ void gameOver()
 {
     stopMotors();
     lcd.clear();
-    lcd.print("Your score was");
+    Serial.print("Your score was");
     lcd.setCursor(0, 1);
-    lcd.print(score);
+    Serial.print(score);
 }
