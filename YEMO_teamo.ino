@@ -24,8 +24,8 @@ const int LCD_D5 = 4;
 const int LCD_D6 = 3;
 const int LCD_D7 = 2;
 const int CAROUSEL_MOTOR_PIN = 9;
-const int BIRD_SERVO_PIN = 10;
-const int BEAM_BREAK_PIN = 7;
+const int BIRD_SERVO_PIN = 6;
+const int BEAM_BREAK_PIN = 13;
 
 /** GAME VARIABLES */
 
@@ -64,10 +64,10 @@ const int MAX_SERVO_POS = 180;
 // flex sensor
 const float VCC = 4.98;                     // Measured voltage of Ardunio 5V line
 const float R_DIV = 47500.0;                // Measured resistance of 3.3k resistor
-const float FLEX_BOUND = 930.0;      // TODO: measure ourselves
+const float FLEX_BOUND = 7000;      // TODO: measure ourselves
 
 // motors
-const int CAROUSEL_MOTOR_SPEED = 180; // 0 to 255 scale TODO:tune
+const int CAROUSEL_MOTOR_SPEED = 100; // 0 to 255 scale TODO:tune
 
 /** OBJECTS */
 Servo birdServo;                                                       // create servo object to control a servo
@@ -125,8 +125,9 @@ void loop()
     {
         game();
 
+
         //Serial.println(measureFlex());
-        if (FLEX_BOUND > measureFlex()) //TODO: change to <
+        if (FLEX_BOUND < measureFlex())
         {
             gameOver();
             delay(2000); // does the delay need to be this large?
@@ -140,9 +141,9 @@ void loop()
  */
 void game()
 {
-    incrementScore();
-    printScore();
-    positionBird();
+  incrementScore();
+  rotateCarousel();
+  positionBird();
 }
 
 /**
@@ -150,22 +151,16 @@ void game()
  */
 void incrementScore()
 {
-    beamState = digitalRead(BEAM_BREAK_PIN);
+  beamState = digitalRead(BEAM_BREAK_PIN);
+  if (!beamState && lastBeamState) {
+    score++;
+  }
 
-    if (!beamState && lastBeamState) // if the beam was just broken, increase score
-        score++;
-        lcd.print(score);
-    lastBeamState = beamState;
+  lastBeamState = beamState;
+  lcd.setCursor(0, 0);
+  lcd.print(score);
 }
 
-/**
- * prints the score to the screem
- */
-void printScore()
-{
-    lcd.setCursor(0, 0);
-    lcd.println(score); // Prints the score
-}
 
 /**
  * sets desired servo position and from joystick reading
@@ -186,6 +181,7 @@ float measureFlex()
     flexADC = analogRead(FLEX_PIN);
     flexV = flexADC * VCC / MAX_ANALOG_READ;
     flexR = R_DIV * (VCC / flexV - 1.0);
+    Serial.println(flexR);
     return flexR;
 }
 
@@ -194,7 +190,7 @@ float measureFlex()
  */
 void rotateCarousel()
 {
-    analogWrite(CAROUSEL_MOTOR_PIN, CAROUSEL_MOTOR_SPEED);
+    digitalWrite(CAROUSEL_MOTOR_PIN, CAROUSEL_MOTOR_SPEED);
 }
 
 /**
@@ -240,7 +236,7 @@ void gameOver()
 {
     stopMotors();
     lcd.clear();
-    Serial.print("Your score was");
+    lcd.print("Your score was");
     lcd.setCursor(0, 1);
-    Serial.print(score);
+    lcd.print(score);
 }
