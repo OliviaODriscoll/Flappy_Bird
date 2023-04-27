@@ -158,9 +158,7 @@ void incrementScore()
 {
     beamState = digitalRead(BEAM_BREAK_PIN);
     if (!beamState && lastBeamState)
-    {
         score++;
-    }
 
     lastBeamState = beamState;
     lcd.setCursor(0, 0);
