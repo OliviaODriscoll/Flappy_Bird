@@ -67,11 +67,11 @@ const float FLEX_BOUND = 230;
 const int CAROUSEL_MOTOR_SPEED = 100;
 
 /** OBJECTS */
-Servo birdServo;     // create servo object to control  servo
+Servo birdServo;                                                       // create servo object to control  servo
 LiquidCrystal lcd(LCD_RS, LCD_ENABLE, LCD_D4, LCD_D5, LCD_D6, LCD_D7); // Creates an LCD object.
 
 /**
- * initializes pins to appropriate read/write setting. 
+ * initializes pins to appropriate read/write setting.
  * displays welcome message.
  */
 void setup()
@@ -99,7 +99,7 @@ void setup()
     // display welcome message
     lcd.setCursor(0, 0);
     lcd.print("Welcome to"); // Prints "Welcome to Flappy Bird!" on the LCD
-    lcd.setCursor(0, 1); // print half the message on the second line
+    lcd.setCursor(0, 1);     // print half the message on the second line
     lcd.print("Flappy Bird!");
 }
 
@@ -124,10 +124,11 @@ void game()
     isGameFinished();
 }
 
-/** 
+/**
  * checks if the game has finished
-*/
-void isGameFinished(){
+ */
+void isGameFinished()
+{
     if (FLEX_BOUND > measureFlex())
     {
         gameOver();
