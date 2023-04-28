@@ -8,7 +8,7 @@
 #include <LiquidCrystal.h> // includes the LiquidCrystal Library
 #include <Servo.h>
 
-/** PORTS  */
+/** PINS  */
 
 // analog
 const int SW_pin = 8;   // digital pin connected to switch output
@@ -42,15 +42,14 @@ int Ytotal = 0;
 int Y_Pos = 0;
 
 // bird
-int birdPos = 0; int pos = 0;
+int birdPos = 0;
+int pos = 0;
 
 // beam break
 int beamState;
 int lastBeamState = 0;
 
 // flex
-int flexADC;
-float flexV;
 float flexR;
 
 // game data
@@ -62,19 +61,18 @@ const int MAX_ANALOG_READ = 1023.0;
 const int MAX_SERVO_POS = 180;
 
 // flex sensor
-const float VCC = 4.98;                     // Measured voltage of Ardunio 5V line
-const float R_DIV = 47500.0;                // Measured resistance of 3.3k resistor
-const float FLEX_BOUND = 7000;      // TODO: measure ourselves
+const float FLEX_BOUND = 230;
 
 // motors
-const int CAROUSEL_MOTOR_SPEED = 100; // 0 to 255 scale TODO:tune
+const int CAROUSEL_MOTOR_SPEED = 100;
 
 /** OBJECTS */
-Servo birdServo;                                                       // create servo object to control a servo
+Servo birdServo;                                                       // create servo object to control  servo
 LiquidCrystal lcd(LCD_RS, LCD_ENABLE, LCD_D4, LCD_D5, LCD_D6, LCD_D7); // Creates an LCD object.
 
 /**
- * initializes pins to appropriate read/write setting. displays welcome message.
+ * initializes pins to appropriate read/write setting.
+ * displays welcome message.
  */
 void setup()
 {
@@ -101,7 +99,7 @@ void setup()
     // display welcome message
     lcd.setCursor(0, 0);
     lcd.print("Welcome to"); // Prints "Welcome to Flappy Bird!" on the LCD
-    lcd.setCursor(0, 1);
+    lcd.setCursor(0, 1);     // print half the message on the second line
     lcd.print("Flappy Bird!");
 }
 
@@ -110,30 +108,9 @@ void setup()
  */
 void loop()
 {
-
-    analogWrite(6, 9);
-
-    if ((digitalRead(SW_pin) == 0) && (!startToggle))
-    { // button has been pressed to start game
-        startToggle = true;
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        rotateCarousel();
-    }
-
+    checkStart();
     while (startToggle)
-    {
         game();
-
-
-        //Serial.println(measureFlex());
-        if (FLEX_BOUND < measureFlex())
-        {
-            gameOver();
-            delay(2000); // does the delay need to be this large?
-            startToggle = false;
-        }
-    }
 }
 
 /**
@@ -141,9 +118,38 @@ void loop()
  */
 void game()
 {
-  incrementScore();
-  rotateCarousel();
-  positionBird();
+    incrementScore();
+    rotateCarousel();
+    positionBird();
+    isGameFinished();
+}
+
+/**
+ * checks if the game has finished
+ */
+void isGameFinished()
+{
+    if (FLEX_BOUND > measureFlex())
+    {
+        gameOver();
+        delay(2000);
+        startToggle = false;
+    }
+}
+
+/**
+ * checks if the game has started
+ */
+void checkStart()
+{
+    if ((digitalRead(SW_pin) == 0) && (!startToggle))
+    { // button has been pressed to start game
+        score = 0;
+        startToggle = true;
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        rotateCarousel();
+    }
 }
 
 /**
@@ -151,23 +157,21 @@ void game()
  */
 void incrementScore()
 {
-  beamState = digitalRead(BEAM_BREAK_PIN);
-  if (!beamState && lastBeamState) {
-    score++;
-  }
+    beamState = digitalRead(BEAM_BREAK_PIN);
+    if (!beamState && lastBeamState)
+        score++;
 
-  lastBeamState = beamState;
-  lcd.setCursor(0, 0);
-  lcd.print(score);
+    lastBeamState = beamState;
+    lcd.setCursor(0, 0);
+    lcd.print(score);
 }
-
 
 /**
  * sets desired servo position and from joystick reading
  */
 void positionBird()
 {
-    smoother(X_pin,Y_pin);
+    smoother(X_pin, Y_pin);
     birdPos = map(X_Pos, 0, MAX_ANALOG_READ, 0, MAX_SERVO_POS);
     birdServo.write(birdPos);
 }
@@ -178,9 +182,8 @@ void positionBird()
 float measureFlex()
 {
     // Read the ADC, and calculate voltage and resistance from it
-    flexADC = analogRead(FLEX_PIN);
-    flexV = flexADC * VCC / MAX_ANALOG_READ;
-    flexR = R_DIV * (VCC / flexV - 1.0);
+    flexR = analogRead(FLEX_PIN);         // Read and save analog value from potentiometer
+    flexR = map(flexR, 700, 900, 0, 255); // Map value 0-1023 to 0-255 (PWM)
     Serial.println(flexR);
     return flexR;
 }
@@ -198,7 +201,6 @@ void rotateCarousel()
  */
 void stopMotors()
 {
-    birdServo.detach();
     analogWrite(CAROUSEL_MOTOR_PIN, 0);
 }
 
