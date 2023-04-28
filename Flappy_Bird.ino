@@ -67,7 +67,7 @@ const float FLEX_BOUND = 230;
 const int CAROUSEL_MOTOR_SPEED = 100;
 
 /** OBJECTS */
-Servo birdServo;                                                       // create servo object to control  servo
+Servo birdServo;         // create servo object to control  servo
 LiquidCrystal lcd(LCD_RS, LCD_ENABLE, LCD_D4, LCD_D5, LCD_D6, LCD_D7); // Creates an LCD object.
 
 /**
